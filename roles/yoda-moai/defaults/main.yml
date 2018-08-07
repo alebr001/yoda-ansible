@@ -5,10 +5,10 @@ rpm_dest_dir: /tmp
 
 yoda_moai_packages:
   MOAI:
-    package: MOAI
-    url: https://github.com/UtrechtUniversity/yoda-moai/releases/download/yoda-1.0b
-    filename: MOAI-2.0.0-1.noarch.rpm
-    checksum: sha256:115ba8c8a9a91f4d26a1dba089e579c899530cc7789b739a7cfdd0cfc031e3a1
+    package: MOAI-2.1.3-1
+    url: https://github.com/UtrechtUniversity/yoda-moai/releases/download/yoda-1.0b/
+    filename: MOAI-2.1.3-1.noarch.rpm
+    checksum: sha256:f2020112397e13cfb035ec6d43093b4f3cfede6a6c6a328293729d50f0acf426
   pyoai:
     package: python-pyoai
     url: https://github.com/UtrechtUniversity/yoda-moai/releases/download/yoda-1.0b
@@ -33,7 +33,7 @@ yoda_moai_database_connection_string: "sqlite:///{{ yoda_moai_home }}/moai.db"
 yoda_inbox_user: inbox
 yoda_metadata_inbox: "{{ yoda_moai_home }}/metadata"
 
-yoda_public_host: combined.yoda.dev   # Yoda public host
-yoda_public_fqdn: public.yoda.dev     # Yoda public fully qualified domain name (FQDN)
+yoda_public_host: combined.yoda.test   # Yoda public host
+yoda_public_fqdn: public.yoda.test     # Yoda public fully qualified domain name (FQDN)
 yoda_public_port: 443
 

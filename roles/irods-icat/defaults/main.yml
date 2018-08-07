@@ -21,15 +21,15 @@ irods_db:
   checksum: sha1:5872b49bd75b6ff882a7e265cf5a502b9ca51a74
 
 # iRODS configuration.
-irods_admin: rods
-irods_password: rods
-irods_database_fqdn: database.yoda.dev
+irods_admin: rods                          # iRODS admin username
+irods_password: rods                       # iRODS admin password
+irods_database_fqdn: database.yoda.test
 irods_database_name: ICAT
 irods_database_port: 5432
-irods_database_user: irodsdb
-irods_database_password: irodsdev
-irods_authentication_scheme: Native        # "Native" or "Pam"
-irods_zone: tempZone
+irods_database_user: irodsdb               # The iRODS database username
+irods_database_password: irodsdev          # The password for the iRODS database username
+irods_authentication_scheme: Native        # iRODS authentication method: "Native" or "PAM"
+irods_zone: tempZone                       # The name of the iRODS Zone
 irods_port_range_begin: 20000
 irods_port_range_end: 20199
 irods_icat_port: 1247
@@ -37,6 +37,7 @@ irods_service_account: irods
 irods_vault_directory: /var/lib/irods/Vault
 irods_control_plane_port: 1248
 irods_schema_uri: https://schemas.irods.org/configuration
+irods_ssl_verify_server: cert
 
 # PAM Radius configuration.
 pam_radius_config: |
@@ -48,4 +49,4 @@ openssl_private_dir: '/etc/pki/tls/private'
 openssl_certs_dir: '/etc/pki/tls/certs'
 openssl_dhparams: dhparams.pem
 openssl_key_signed: localhost.key
-openssl_crt_signed: localhost.crt
+openssl_crt_signed_and_chain: localhost_and_chain.crt

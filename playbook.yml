@@ -8,7 +8,7 @@
       assert:
         that: "ansible_version.full | version_compare('2.4', '>=')"
         msg: >
-          "You must update Ansible to at least 2.4 to deploy YoDa."
+          "You must update Ansible to at least 2.4 to deploy Yoda."
 
 
 - name: Add hosts entries to development instances
@@ -51,7 +51,8 @@
     - irods-runtime
     - irods-microservices
     - composable-resources
-    - yoda-rulesets
+    - role: yoda-rulesets
+      install_rulesets: yes
   tags:
     - icat
 
@@ -63,6 +64,8 @@
     - irods-resource
     - irods-runtime
     - irods-microservices
+    - role: yoda-rulesets
+      install_rulesets: no
   tags:
     - resource
 
@@ -76,4 +79,3 @@
     - yoda-public
   tags:
     - public
- 

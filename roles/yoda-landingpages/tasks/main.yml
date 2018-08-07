@@ -22,24 +22,6 @@
     state: present
 
 
-- name: Check if index page is present
-  stat: path='{{ landingpages_root }}/index.html'
-  register: index
-
-
-- name: Ensure empty index page is present
-  file:
-    path: '{{ landingpages_root }}/index.html'
-    state: touch
-  when: index.stat.exists == False
-
-
-- name: Ensure old Yoda landingpages Apache configuration is absent
-  file:
-    path: /etc/httpd/conf.d/landingpages-vhost.conf
-    state: absent
-
-
 - name: Ensure Yoda landingpage static file directories are present
   file:
     path: '{{ item }}'
@@ -48,6 +30,7 @@
   with_items:
     - '{{ landingpages_root }}/static/css/'
     - '{{ landingpages_root }}/static/img/'
+    - '{{ landingpages_root }}/static/js/'
 
 
 - name: Ensure Yoda landingpage static files are present
@@ -56,9 +39,15 @@
     dest: '{{ item.dest }}'
     mode: 0644
   with_items:
+    - src: 'index.html'
+      dest: '{{ landingpages_root }}/index.html'  
     - src: 'yoda-landingpage.css'
       dest: '{{ landingpages_root }}/static/css/yoda-landingpage.css'
     - src: 'logo-uu.svg'
       dest: '{{ landingpages_root }}/static/img/logo-uu.svg'
     - src: 'logo_footer.svg'
       dest: '{{ landingpages_root }}/static/img/logo_footer.svg'
+    - src: 'jquery-3.2.1.min.js'
+      dest: '{{ landingpages_root }}/static/js/jquery-3.2.1.min.js'
+    - src: 'main.js'
+      dest: '{{ landingpages_root }}/static/js/main.js'

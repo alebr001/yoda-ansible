@@ -24,9 +24,9 @@ VAGRANTFILE_API_VERSION = "2"
 BOX = 'centos/7'
 GUI = false
 CPU = 1
-RAM = 512
+RAM = 1024
 
-DOMAIN  = ".yoda.dev"
+DOMAIN  = ".yoda.test"
 NETWORK = "192.168.50."
 NETMASK = "255.255.255.0"
 
@@ -37,11 +37,10 @@ if instance == "full" then
     "icat"     => [NETWORK+"12", CPU, RAM, GUI, BOX],
     "resource" => [NETWORK+"13", CPU, RAM, GUI, BOX],
     "public"   => [NETWORK+"14", CPU, RAM, GUI, BOX],
-
   }
 else
   HOSTS = {
-    "combined" => [NETWORK+"10", 2, 1024, GUI, BOX],
+    "combined" => [NETWORK+"10", 2, 4096, GUI, BOX],
   }
 end
 
@@ -65,6 +64,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       machine.vm.hostname = name + DOMAIN
       machine.vm.network 'private_network', ip: ipaddr, netmask: NETMASK
       machine.vm.synced_folder ".", "/vagrant", disabled: true
+      machine.vm.provision "shell",
+        inline: "sudo timedatectl set-timezone Europe/Amsterdam"
     end
   end
 
@@ -79,6 +80,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       controller.vm.network :private_network, ip: "192.168.50.5", netmask: NETMASK
       controller.vm.provision "shell", privileged: false, path: "vagrant/provision_controller.sh"
       controller.vm.synced_folder ".", "/vagrant", disabled: true
+      controller.vm.provision "shell",
+        inline: "sudo timedatectl set-timezone Europe/Amsterdam"
     end
   end
 end

@@ -83,12 +83,6 @@
     state: directory
 
 
-- name: Ensure old  Yoda MOAI Apache configuration is absent
-  file:
-    path: /etc/httpd/conf.d/yoda-moai-vhost.conf
-    state: absent
-
-
 - name: Install moai.wsgi
   template:
     src: moai.wsgi.j2
@@ -112,7 +106,7 @@
 - name: Initialize Yoda MOAI database
   become_user: '{{ yoda_moai_user }}'
   become: yes
-  command: '/usr/bin/update_moai -q --config {{ yoda_moai_home }}/settings.ini yoda_moai &>/dev/null'
+  command: '/usr/local/bin/update_moai -q --config {{ yoda_moai_home }}/settings.ini yoda_moai &>/dev/null'
   args:
     creates: '{{ yoda_moai_home }}/moai.db'
 
@@ -123,11 +117,12 @@
     setype: httpd_sys_rw_content_t
     state: present
   register: filecontext
+  when: ansible_selinux
 
 
 - name: Ensure selinux context is enforced on Yoda MOAI database
   shell: 'restorecon {{ yoda_moai_home }}/{{ item.target }}'
-  when: filecontext|changed
+  when: filecontext|changed and ansible_selinux
   with_items:
   - { index: 0, target: 'moai.db' }
 
@@ -137,4 +132,4 @@
     user: '{{ yoda_moai_user }}'
     name: 'cronjob-update-moai'
     minute: '*/5'
-    job: '/usr/bin/update_moai -q --config {{ yoda_moai_home }}/settings.ini yoda_moai &>/dev/null'
+    job: '/usr/local/bin/update_moai -q --config {{ yoda_moai_home }}/settings.ini yoda_moai &>/dev/null'

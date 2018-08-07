@@ -35,10 +35,7 @@
 
 
 - include_tasks: "{{ ruleset.name }}.yml"
-  become_user: "{{ irods_service_account }}"
-  become: yes
   with_items: "{{ rulesets }}"
   loop_control:
     loop_var: ruleset
-  when: ruleset.install_scripts
-
+  when: ruleset.install_scripts and install_rulesets

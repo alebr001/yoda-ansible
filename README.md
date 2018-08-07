@@ -41,10 +41,10 @@ ansible-playbook -i environments/development/allinone/ test.yml
 
 Add following hosts to /etc/hosts (GNU/Linux or macOS) or  %SystemRoot%\System32\drivers\etc\hosts (Windows):
 ```
-192.168.50.10 portal.yoda.dev
-192.168.50.10 data.yoda.dev
-192.168.50.10 public.data.yoda.dev
-192.168.50.10 public.yoda.dev
+192.168.50.10 portal.yoda.test
+192.168.50.10 data.yoda.test
+192.168.50.10 public.data.yoda.test
+192.168.50.10 public.yoda.test
 ```
 
 ## Upgrading Yoda development instance
@@ -61,7 +61,7 @@ Upgrade Ansible scripts:
 git pull
 ```
 
-Upgrade YoDa instance:
+Upgrade Yoda instance:
 ```bash
 ansible-playbook -i environments/development/allinone/ playbook.yml
 ```

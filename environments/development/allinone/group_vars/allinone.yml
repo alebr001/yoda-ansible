@@ -10,12 +10,33 @@ ansible_ssh_private_key_file: vagrant/ssh/vagrant # Path to private key file of 
 #####################
 # Yoda configuration
 #####################
-instance: allinone                                # Name of Yoda instance, as defined in hosts file
-yoda_version: release-1.0                         # Git branch, for example: development or release-0.9.7
-codeigniter_environment: development              # CodeIgniter environment: development, testing, acceptance or production
-yoda_portal_fqdn: portal.yoda.dev                 # Yoda Portal fully qualified domain name (FQDN)
-yoda_davrods_fqdn: data.yoda.dev                  # Yoda Davrods WebDAV fully qualified domain name (FQDN)
-yoda_davrods_anonymous_fqdn: public.data.yoda.dev # Yoda Davrods anonymous WebDAV fully qualified domain name (FQDN)
+instance: allinone                                 # Name of Yoda instance, as defined in hosts file
+yoda_version: release-1.2                          # Git branch, for example: development or release-1.0
+codeigniter_environment: development               # CodeIgniter environment: development, testing, acceptance or production
+yoda_portal_fqdn: portal.yoda.test                 # Yoda Portal fully qualified domain name (FQDN)
+yoda_davrods_fqdn: data.yoda.test                  # Yoda Davrods WebDAV fully qualified domain name (FQDN)
+yoda_davrods_anonymous_fqdn: public.data.yoda.test # Yoda Davrods anonymous WebDAV fully qualified domain name (FQDN)
+
+######################
+# Yoda Portal modules
+######################
+modules:
+  - name: group-manager
+    repo: "https://github.com/UtrechtUniversity/yoda-portal-group-manager.git"
+    dest: /var/www/yoda/yoda-portal/modules/group-manager
+    version: "{{ yoda_version }}"
+  - name: research
+    repo: "https://github.com/UtrechtUniversity/yoda-portal-research.git"
+    dest: /var/www/yoda/yoda-portal/modules/research
+    version: "{{ yoda_version }}"
+  - name: statistics
+    repo: "https://github.com/UtrechtUniversity/yoda-portal-statistics.git"
+    dest: /var/www/yoda/yoda-portal/modules/statistics
+    version: "{{ yoda_version }}"
+  - name: intake
+    repo: "https://github.com/UtrechtUniversity/yoda-portal-intake.git"
+    dest: /var/www/yoda/yoda-portal/modules/intake
+    version: "{{ yoda_version }}"
 
 ######################
 # iRODS configuration
@@ -26,10 +47,11 @@ irods_database_user: irodsdb               # The iRODS database username
 irods_database_password: irodsdev          # The password for the iRODS database username
 irods_authentication_scheme: Native        # iRODS authentication method: "Native" or "PAM"
 irods_zone: tempZone                       # The name of the iRODS Zone
-irods_icat_fqdn: combined.yoda.dev         # iRODS iCAT fully qualified domain name (FQDN)
-irods_database_fqdn: combined.yoda.dev     # iRODS database fully qualified domain name (FQDN)
-irods_resource_fqdn: combined.yoda.dev     # iRODS resource fully qualified domain name (FQDN)
+irods_icat_fqdn: combined.yoda.test        # iRODS iCAT fully qualified domain name (FQDN)
+irods_database_fqdn: combined.yoda.test    # iRODS database fully qualified domain name (FQDN)
+irods_resource_fqdn: combined.yoda.test    # iRODS resource fully qualified domain name (FQDN)
 irods_default_resc: irodsResc              # iRODS default resource name
+irods_ssl_verify_server: none              # Verify TLS certificate, use 'cert' for acceptance and production
 irods_resources:
   - name: dev001_1
     host: "{{ irods_icat_fqdn }}"
@@ -86,6 +108,11 @@ irods_resources:
 # Ruleset configuration
 ########################
 rulesets:
+  - name: irods-ruleset-youth-cohort
+    repo: https://github.com/UtrechtUniversity/irods-ruleset-youth-cohort.git
+    ruleset_name: rules-yc
+    version: "{{ yoda_version }}"
+    install_scripts: no
   - name: irods-ruleset-i-lab
     repo: https://github.com/UtrechtUniversity/irods-ruleset-i-lab.git
     ruleset_name: rules-i-lab
@@ -109,13 +136,13 @@ rulesets:
 ################################
 # Research module configuration
 ################################
-default_yoda_schema: ilab      # Default Yoda XML scheme: ilab or dc
+default_yoda_schema: test      # Default Yoda XML scheme: default or test
 enable_revisions: 1            # Enable revisions: yes (1) or no (0)
 revision_strategy: B           # Revision strategy: A, B, J or Simple
 yoda_random_id_length: 6       # Length of random ID to add to persistent identifier
 yoda_prefix: UU01              # Prefix for internal portion of persistent identifier
 update_rulesets: yes           # Update already installed rulesets with git
-update_schemas: 1              # Update already installed schemas, formelements and stylesheets: yes (1) or no (0) 
+update_schemas: 1              # Update already installed schemas, formelements and stylesheets: yes (1) or no (0)
 
 #########################
 # DataCite Configuration
@@ -136,10 +163,11 @@ pam_radius_config: |
 ############################
 # Public host configuration
 ############################
-yoda_public_host: combined.yoda.dev   # Yoda public host
-yoda_public_fqdn: public.yoda.dev     # Yoda public fully qualified domain name (FQDN)
+yoda_public_host: combined.yoda.test   # Yoda public host
+yoda_public_fqdn: public.yoda.test     # Yoda public fully qualified domain name (FQDN)
 
 # Yoda public upload private key (base64 encoded)
+# ssh-keygen -t ed25519 -> base64
 upload_priv_key: |
   LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFB
   QUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhP

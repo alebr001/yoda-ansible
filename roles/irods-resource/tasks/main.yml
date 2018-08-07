@@ -56,3 +56,135 @@
   with_items:
   - /var/lib/irods
   - /etc/irods
+
+
+- name: Enable ports for resource in firewall
+  firewalld:
+    port: '{{ item }}'
+    permanent: true
+    state: enabled
+    immediate: yes
+  with_items:
+    - '{{ irods_icat_port }}/tcp'
+    - '{{ irods_port_range_begin }}-{{ irods_port_range_end }}/tcp'
+  notify: Restart firewall
+
+
+- name: Retrieve iRODS iCAT server
+  set_fact:
+    'irods_icat': '{{ item }}'
+  with_inventory_hostnames:
+    - 'icats:&{{ instance }}'
+
+
+- name: Store iRODS server keys in variables
+  set_fact:
+    '{{ item.fact }}': '{{ item.key }}'
+  with_items:
+    - fact: irods_zone_key
+      key: "{{ hostvars[irods_icat]['zone_key']['stdout'] }}"
+    - fact: irods_negotiation_key
+      key: "{{ hostvars[irods_icat]['negotiation_key']['stdout'] }}"
+    - fact: irods_control_plane_key
+      key: "{{ hostvars[irods_icat]['server_control_plane_key']['stdout'] }}"
+
+
+- name: Copy responses for setup_irods.sh
+  template:
+    src: setup_irods.j2
+    dest: /etc/irods/setup_irods
+    force: no
+  when: not ansible_check_mode
+
+
+- name: Configure iRODS resource server
+  shell: /var/lib/irods/packaging/setup_irods.sh
+    < /etc/irods/setup_irods
+  args:
+    creates: /etc/irods/service_account.config
+  run_once: true
+  when: not ansible_check_mode
+
+
+- name: Ensure private key file is available for iRODS
+  command: 'cp {{ openssl_private_dir }}/{{ openssl_key_signed }} {{ openssl_key_signed }}'
+  args:
+    chdir: '/etc/irods'
+    creates: '{{ openssl_key_signed }}'
+
+
+- name: Ensure CA chain with signed certificate is present
+  command: 'ln -s {{ openssl_certs_dir }}/{{ openssl_crt_signed_and_chain }} {{ openssl_crt_signed_and_chain }}'
+  args:
+    chdir: '/etc/irods'
+    creates: '{{ openssl_crt_signed_and_chain }}'
+
+
+- name: Ensure Diffie-Hellman parameters are present
+  command: openssl dhparam -2 -out {{ openssl_dhparams }} 2048
+  args:
+    chdir: '/etc/irods'
+    creates: '{{ openssl_dhparams }}'
+
+
+- name: Ensure iRODS has access to PKI files
+  file:
+    path: '{{ item }}'
+    mode: 0600
+    group: '{{ irods_service_account }}'
+    owner: '{{ irods_service_account }}'
+    state: file
+  with_items:
+    - '/etc/irods/{{ openssl_key_signed }}'
+    - '/etc/irods/{{ openssl_dhparams }}'
+  when: not ansible_check_mode
+
+
+- name: Ensure iRODS has access to PKI files
+  file:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    mode: 0600
+    group: '{{ irods_service_account }}'
+    owner: '{{ irods_service_account }}'
+    state: link
+  with_items:
+    - src: '{{ openssl_certs_dir }}/{{ openssl_crt_signed_and_chain }}'
+      dest: '/etc/irods/{{ openssl_crt_signed_and_chain }}'
+  when: not ansible_check_mode
+
+
+- name: Ensure iRODS is configured to use SSL
+  become_user: '{{ irods_service_account }}'
+  become: yes
+  irods_config:
+    path: '/var/lib/irods/.irods/irods_environment.json'
+    key: '{{ item.key }}'
+    value: '{{ item.value }}'
+  with_items:
+    - key: 'irods_ssl_certificate_chain_file'
+      value: '/etc/irods/{{ openssl_crt_signed_and_chain }}'
+    - key: 'irods_ssl_certificate_key_file'
+      value: '/etc/irods/{{ openssl_key_signed }}'
+    - key: 'irods_ssl_dh_params_file'
+      value: '/etc/irods/{{ openssl_dhparams }}'
+    - key: 'irods_client_server_policy'
+      value: 'CS_NEG_REQUIRE'
+    - key: 'irods_ssl_verify_server'
+      value: '{{ irods_ssl_verify_server }}'
+
+
+- name: Ensure iRODS server keys are synced
+  become_user: '{{ irods_service_account }}'
+  become: yes
+  irods_config:
+    path: '/etc/irods/server_config.json'
+    key: '{{ item.key }}'
+    value: '{{ item.value }}'
+  with_items:
+    - key: 'zone_key'
+      value: "{{ hostvars[irods_icat]['zone_key']['stdout'] }}"
+    - key: 'server_control_plane_key'
+      value: "{{ hostvars[irods_icat]['server_control_plane_key']['stdout'] }}"
+    - key: 'negotiation_key'
+      value: "{{ hostvars[irods_icat]['negotiation_key']['stdout'] }}"
