@@ -27,14 +27,14 @@
   package:
     name: '{{ rpm_dest_dir }}/{{ davrods.filename }}'
     state: present
-  when: not davrods_repo.results
+  when: not davrods_repo.results and not ansible_check_mode
 
 
 - name: Ensure davrods rpm is installed
   package:
     name: '{{ davrods.package }}'
     state: present
-  when: davrods_repo.results
+  when: davrods_repo.results and not ansible_check_mode
 
 
 - name: Allow Apache to execute davrods module
@@ -47,7 +47,7 @@
 
 - name: Ensure selinux context is enforced on davrods module
   shell: restorecon /etc/httpd/modules/{{ item.target }}
-  when: filecontext|changed and ansible_selinux
+  when: filecontext is changed and ansible_selinux
   with_items:
   - { index: 0, target: 'mod_davrods.so' }
 
@@ -89,16 +89,20 @@
     state: present
   register: filecontext
   with_items:
-    - /var/lib/irods/plugins/network/libtcp.so
-    - /var/lib/irods/plugins/network/libssl.so
+    - /usr/lib/irods/plugins/network/libtcp_client.so
+    - /usr/lib/irods/plugins/network/libssl_client.so
+    - /usr/lib/irods/plugins/network/libtcp_server.so
+    - /usr/lib/irods/plugins/network/libssl_server.so
 
 
 - name: Ensure selinux context is enforced on iRODS network plugins
-  shell: restorecon /var/lib/irods/plugins/network/{{ item.target }}
-  when: filecontext.results[item.index] | changed and ansible_selinux
+  shell: restorecon /usr/lib/irods/plugins/network/{{ item.target }}
+  when: filecontext.results[item.index] is changed and ansible_selinux
   with_items:
-  - { index: 0, target: 'libtcp.so' }
-  - { index: 1, target: 'libssl.so' }
+  - { index: 0, target: 'libtcp_client.so' }
+  - { index: 1, target: 'libssl_client.so' }
+  - { index: 2, target: 'libtcp_server.so' }
+  - { index: 3, target: 'libssl_server.so' }
 
 
 - name: Allow public to ports for davrods in firewall
@@ -130,3 +134,4 @@
   - { src: head.html.j2, dest: 'head.html' }
   - { src: header.html.j2, dest: 'header.html' }
   - { src: footer.html.j2, dest: 'footer.html' }
+

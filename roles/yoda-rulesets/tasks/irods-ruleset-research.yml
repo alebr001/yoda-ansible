@@ -26,8 +26,8 @@
     '*update={{ update_schemas }}'
   register: install_default_xml_for_metadata
   when: (update_schemas == 1) or
-        (installed_defaults|json_query('results[*].stderr')|join(' ')|search('does not exist'))
-  changed_when: install_default_xml_for_metadata.stdout|search('(Installed|Updated)')
+        (installed_defaults|json_query('results[*].stderr')|join(' ') is search('does not exist'))
+  changed_when: install_default_xml_for_metadata.stdout is search('(Installed|Updated)')
 
 
 - name: List installed or updated schemas, formelements or stylesheets
@@ -35,7 +35,7 @@
   become: yes
   debug:
     var: item
-  when: item|search('(Installed|Updated)')
+  when: item is search('(Installed|Updated)')
   with_items: "{{ install_default_xml_for_metadata.stdout_lines|default('Script did not run') }}"
 
 
@@ -58,31 +58,54 @@
   when: (not ansible_check_mode) and (terms_installed.stderr.find('does not exist') >= 0)
 
 
-- name: Configure cronjob to copy datapackages to the vault
+- name: Ensure that Yoda publication directory is present
+  become_user: '{{ irods_service_account }}'
+  become: yes
+  command:
+    imkdir /{{ irods_zone }}/yoda/publication
+  ignore_errors: true
+
+
+- name: Remove cronjob to copy datapackages to the vault
   become_user: "{{ irods_service_account }}"
   become: yes
   cron:
     name: 'copy-accepted-folders-to-vault.r'
-    minute: '*/2'
-    job: '/bin/irule -F /etc/irods/irods-ruleset-research/tools/copy-accepted-folders-to-vault.r >>$HOME/iRODS/server/log/job_copy-accepted-folder-to-vault.log 2>&1'
+    state: absent
 
 
-- name: Configure cronjob to ingest changes into vault
+- name: Remove cronjob to ingest changes into vault
   become_user: "{{ irods_service_account }}"
   become: yes
   cron:
     name: 'ingest-changes-into-vault.r'
-    minute: '*'
-    job: '/bin/irule -F /etc/irods/irods-ruleset-research/tools/ingest-changes-into-vault.r >>$HOME/iRODS/server/log/job_ingest-changes-into-vault.log 2>&1'
+    state: absent
 
 
-- name: Configure cronjob to process vault actions
+- name: Remove cronjob to process vault actions
   become_user: "{{ irods_service_account }}"
   become: yes
   cron:
     name: 'process-vault-status-transitions.r'
+    state: absent
+
+
+- name: Configure cronjob to process publications
+  become_user: "{{ irods_service_account }}"
+  become: yes
+  cron:
+    name: 'process-publication.r'
     minute: '*'
-    job: '/bin/irule -F /etc/irods/irods-ruleset-research/tools/process-vault-status-transitions.r >>$HOME/iRODS/server/log/job_process-vault-status-transitions.log 2>&1'
+    job: '/bin/irule -F /etc/irods/irods-ruleset-research/tools/process-publication.r >/dev/null 2>&1'
+
+
+- name: Configure cronjob to retry copy-to-vault
+  become_user: "{{ irods_service_account }}"
+  become: yes
+  cron:
+    name: 'retry-copy-to-vault.r'
+    minute: '*'
+    job: '/bin/irule -F /etc/irods/irods-ruleset-research/tools/retry-copy-to-vault.r >/dev/null 2>&1'
 
 
 - name: Install script for revision clean up
@@ -95,15 +118,30 @@
     group: '{{ irods_service_account }}'
 
 
-- name: Remove insecure securecopy.sh
+- name: Remove outdated ExecCmd dir
   file:
-    path: /var/lib/irods/iRODS/server/bin/cmd/securecopy.sh
+    path: /var/lib/irods/iRODS/server/bin/cmd1/
     state: absent
 
 
-- name: Ensure that secure ExecCmd dir exists
+- name: Remove outdated ExecCmd dir
   file:
-    path: /var/lib/irods/iRODS/server/bin/cmd1
+    path: /var/lib/irods/msiExecCmd_bin1
+    state: absent
+
+
+- name: Remove outdated scripts from ExecCmd dir
+  file:
+    path: "/var/lib/irods/msiExecCmd_bin/{{ item }}"
+    state: absent
+  with_items:
+    - "scheduled-vaultactions.sh"
+    - "scheduled-vaultingest.sh"
+
+
+- name: Ensure that ExecCmd dir exists
+  file:
+    path: /var/lib/irods/msiExecCmd_bin
     owner: '{{ irods_service_account }}'
     group: '{{ irods_service_account }}'
     mode: 0755
@@ -117,8 +155,42 @@
   copy:
     remote_src: yes
     src: /etc/irods/irods-ruleset-research/tools/securecopy.sh
-    dest: /var/lib/irods/iRODS/server/bin/cmd1/securecopy.sh
+    dest: /var/lib/irods/msiExecCmd_bin/securecopy.sh
     mode: 0755
+  when: not ansible_check_mode
+
+
+- name: Copy scheduled-copytovault.sh to ExecCmd dir
+  become_user: "{{ irods_service_account }}"
+  become: yes
+  copy:
+    remote_src: yes
+    src: /etc/irods/irods-ruleset-research/tools/scheduled-copytovault.sh
+    dest: /var/lib/irods/msiExecCmd_bin/scheduled-copytovault.sh
+    mode: 0755
+  when: not ansible_check_mode
+
+
+- name: Copy admin-vaultactions.sh to ExecCmd dir
+  become_user: "{{ irods_service_account }}"
+  become: yes
+  copy:
+    remote_src: yes
+    src: /etc/irods/irods-ruleset-research/tools/admin-vaultactions.sh
+    dest: /var/lib/irods/msiExecCmd_bin/admin-vaultactions.sh
+    mode: 0755
+  when: not ansible_check_mode
+
+
+- name: Copy admin-vaultingest.sh to ExecCmd dir
+  become_user: "{{ irods_service_account }}"
+  become: yes
+  copy:
+    remote_src: yes
+    src: /etc/irods/irods-ruleset-research/tools/admin-vaultingest.sh
+    dest: /var/lib/irods/msiExecCmd_bin/admin-vaultingest.sh
+    mode: 0755
+  when: not ansible_check_mode
 
 
 - name: Configure cronjob to clean up revisions
@@ -128,10 +200,42 @@
     name: 'cronjob-revision-cleanup.sh'
     minute: 0
     hour: 2
-    job: '/bin/bash $HOME/.irods/cronjob-revision-cleanup.sh >> $HOME/iRODS/server/log/cronjob-revision-cleanup.log 2>&1'
+    job: '/bin/bash $HOME/.irods/cronjob-revision-cleanup.sh >> $HOME/log/cronjob-revision-cleanup.log 2>&1'
 
 
-- name: Set configuration AVUs to system collection
+- name: Remove deprecated configuration AVUs for research ruleset from system collection
+  become_user: "{{ irods_service_account }}"
+  become: yes
+  irods_setavu:
+    name: "/{{ irods_zone }}/yoda"
+    irods_type: Collection
+    attribute: "{{ avu.attribute }}"
+    value: "{{ avu.value }}"
+    state: absent
+  with_items:
+    - attribute: org_datacite_server
+      value: "{{ datacite_server }}"
+    - attribute: org_datacite_username
+      value: "{{ datacite_username }}"
+    - attribute: org_datacite_password
+      value: "{{ datacite_password }}"
+    - attribute: org_sender_email
+      value: "{{ sender_email }}"
+    - attribute: org_sender_name
+      value: "{{ sender_name }}"
+    - attribute: org_reply_to
+      value: "{{ reply_to }}"
+    - attribute: org_smtp_server
+      value: "{{ smtp_server }}"
+    - attribute: org_smtp_username
+      value: "{{ smtp_username }}"
+    - attribute: org_smtp_password
+      value: "{{ smtp_password }}"
+  loop_control:
+    loop_var: avu
+
+
+- name: Set configuration AVUs for research ruleset to system collection
   become_user: "{{ irods_service_account }}"
   become: yes
   irods_setavu:
@@ -140,14 +244,8 @@
     attribute: "{{ avu.attribute }}"
     value: "{{ avu.value }}"
   with_items:
-    - attribute: org_datacite_username
-      value: "{{ datacite_username }}"
-    - attribute: org_datacite_password
-      value: "{{ datacite_password }}"
     - attribute: org_datacite_prefix
       value: "{{ datacite_prefix }}"
-    - attribute: org_datacite_server
-      value: "{{ datacite_server }}"
     - attribute: org_yoda_instance
       value: "{{ yoda_instance }}"
     - attribute: org_moai_host
@@ -160,6 +258,8 @@
       value: "{{ yoda_public_fqdn }}{% if (yoda_public_port is defined) %}:{{ yoda_public_port }}{% endif %}"
     - attribute: org_public_host
       value: "{{ yoda_public_host }}"
+    - attribute: org_davrods_vhost
+      value: "{{ yoda_davrods_fqdn }}{% if (yoda_davrods_port is defined) %}:{{ yoda_davrods_port }}{% endif %}"
     - attribute: org_davrods_anonymous_vhost
       value: "{{ yoda_davrods_anonymous_fqdn }}{% if (yoda_davrods_anonymous_port is defined) %}:{{ yoda_davrods_anonymous_port }}{% endif %}"
   loop_control:

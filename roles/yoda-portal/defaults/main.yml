@@ -4,9 +4,9 @@
 yoda_deployment_user: yodadeployment
 
 yoda_version: development
-irods_php_version: master
+irods_php_version: "{{ yoda_version }}"
 codeigniter_version: "{{ yoda_version }}"
-codeigniter_environment: development
+codeigniter_environment: "{{ yoda_environment }}"
 
 yoda_portal_fqdn: portal.yoda.test
 update_portal: yes
@@ -46,9 +46,9 @@ modules:
 
 # iRODS configuration.
 irods_default_resc: irodsResc              # iRODS default resource name
-irods_authentication_scheme: Native        # iRODS authentication method: "Native" or "PAM"
+irods_authentication_scheme: PAM           # iRODS authentication method: "Native" or "PAM"
 irods_zone: tempZone                       # The name of the iRODS Zone
-irods_icat_fqdn: icat.yoda.test             # iRODS iCAT fully qualified domain name (FQDN)
+irods_icat_fqdn: icat.yoda.test            # iRODS iCAT fully qualified domain name (FQDN)
 irods_icat_port: 1247
 
 # OpenSSL configuration.

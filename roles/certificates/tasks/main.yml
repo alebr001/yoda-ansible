@@ -22,7 +22,7 @@
     -out '{{ openssl_csr_selfsigned }}' -batch -subj \
     '/O={{ openssl_o }}/C={{ openssl_c }}\
      /localityName={{ openssl_localityName }}\
-     /commonName={{ ansible_fqdn }}'"
+     /commonName={{ certificate_domain }}'"
   args:
     chdir: '{{ openssl_certs_dir }}'
     creates: '{{ openssl_csr_selfsigned }}'
@@ -82,6 +82,8 @@
   file:
     path: '{{ item }}'
     mode: 0644
+    group: 'root'
+    owner: 'root'
     state: file
   with_items:
     - '{{ openssl_certs_dir }}/{{ openssl_crt_signed }}'

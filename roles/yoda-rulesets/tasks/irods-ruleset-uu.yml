@@ -56,5 +56,41 @@
     minute: 0
     hour: 6
     day: 15
-    job: '/bin/irule -F /etc/irods/irods-ruleset-uu/tools/monthly-storage-statistics.r >> $HOME/iRODS/server/log/job_monthly-storage-statistics.log 2>&1'
+    job: '/bin/irule -F /etc/irods/irods-ruleset-uu/tools/monthly-storage-statistics.r >> $HOME/log/job_monthly-storage-statistics.log 2>&1'
   when: monthly_storage_statistics.stat.exists == True
+
+
+- name: Set configuration AVUs for UU ruleset to system collection
+  become_user: "{{ irods_service_account }}"
+  become: yes
+  irods_setavu:
+    name: "/{{ irods_zone }}/yoda"
+    irods_type: Collection
+    attribute: "{{ avu.attribute }}"
+    value: "{{ avu.value }}"
+  with_items:
+    - attribute: org_send_notifications
+      value: "{{ send_notifications }}"
+  loop_control:
+    loop_var: avu
+
+
+- name: Ensure that ExecCmd dir exists
+  file:
+    path: /var/lib/irods/msiExecCmd_bin
+    owner: '{{ irods_service_account }}'
+    group: '{{ irods_service_account }}'
+    mode: 0755
+    state: directory
+  when: not ansible_check_mode
+
+
+- name: Copy admin-remove-orphan-vault-if-empty.sh to ExecCmd dir
+  become_user: "{{ irods_service_account }}"
+  become: yes
+  copy:
+    remote_src: yes
+    src: /etc/irods/irods-ruleset-uu/tools/admin-remove-orphan-vault-if-empty.sh
+    dest: /var/lib/irods/msiExecCmd_bin/admin-remove-orphan-vault-if-empty.sh
+    mode: 0755
+  when: not ansible_check_mode

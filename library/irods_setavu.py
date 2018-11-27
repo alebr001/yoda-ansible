@@ -1,15 +1,14 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
-#
-# copyright Utrecht University
-#
-# license: GPL v3
-#
-from ansible.module_utils.basic import *
+# Copyright (c) 2017-2018 Utrecht University
+# GNU General Public License v3.0
 
-ANSIBLE_METADATA = {'metadata_version': '1.0',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
+ANSIBLE_METADATA = {
+    'metadata_version': '1.1',
+    'supported_by': 'community',
+    'status': ['preview']
+}
+
+from ansible.module_utils.basic import *
 
 
 IRODSCLIENT_AVAILABLE = False
@@ -95,7 +94,7 @@ def main():
         message="set {}: {}".format(avu.name, avu.value)
         if not module.check_mode:
             session.metadata.set(model, name, avu)
-    elif not found and state == 'absent':
+    elif found and state == 'absent':
         changed=True
         message="remove {}: {}".format(avu.name, avu.value)
         if not module.check_mode:

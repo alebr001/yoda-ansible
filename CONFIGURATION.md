@@ -4,7 +4,7 @@ Instructions on how to configure a (new) Yoda instance.
 ## 1. Create new environment
 This first step is optional.
 You can configure a (new) Yoda instance in an existing environment or create a new environment.
-A [environment](environments/development/) environment is available with two example instances.
+A [development](environments/development/) environment is available with two example instances.
 
 To create a new environment make a new directory under [environment](environments/).
 For example a production environment:
@@ -87,7 +87,7 @@ ansible_host: host1.yoda.test
 ## 3. Configure (new) Yoda instance
 To configure a (new) Yoda instance we have to edit the instance configuration in the Yoda instance variables directory (group_vars).
 In case of a new Yoda instance we can copy a [configuration](environments/development/full/group_vars/full.yml) of a development instance as base.
-The configuration isplit in several parts. Below an overview of these parts and the configuration options available.
+The configuration is split in several parts. Below an overview of these parts and the configuration options available.
 
 ### Ansible configuration
 Variable                     | Description                                     |
@@ -102,7 +102,7 @@ Variable                     | Description                                      
 -----------------------------|-------------------------------------------------------------------------|
 instance                     | Name of Yoda instance, as defined in hosts file                         |
 yoda_version                 | Git branch, for example: development or release-0.9.7                   |
-codeigniter_environment      | CodeIgniter environment: development, testing, acceptance or production |
+yoda_environment             | Yoda environment: development, testing, acceptance or production        |
 yoda_portal_fqdn             | Yoda Portal fully qualified domain name (FQDN)                          |
 yoda_davrods_fqdn            | Yoda Davrods WebDAV fully qualified domain name (FQDN)                  |
 yoda_davrods_anonymous_fqdn  | Yoda Davrods anonymous WebDAV fully qualified domain name (FQDN)        |
@@ -114,12 +114,12 @@ irods_admin                  | iRODS admin username                             
 irods_password               | iRODS admin password                                                    |
 irods_database_user          | The iRODS database username                                             |
 irods_database_password      | The password for the iRODS database username                            |
-irods_authentication_scheme  | iRODS authentication method: "Native" or "PAM"                          |
 irods_zone                   | The name of the iRODS Zone                                              |
 irods_icat_fqdn              | iRODS iCAT fully qualified domain name (FQDN)                           |
 irods_database_fqdn          | iRODS database fully qualified domain name (FQDN)                       |
 irods_resource_fqdn          | iRODS resource fully qualified domain name (FQDN)                       |
 irods_default_resc           | iRODS default resource name                                             |
+irods_ssl_verify_server      | Verify TLS certificate, use 'cert' for acceptance and production        |
 irods_resources              | Definition of iRODS resources of this Yoda instance                     |
 
 ### Research module configuration
@@ -132,6 +132,17 @@ yoda_random_id_length        | Length of random ID to add to persistent identifi
 yoda_prefix                  | Prefix for internal portion of persistent identifier                              |
 update_rulesets              | Update already installed rulesets with git                                        |
 update_schemas               | Update already installed schemas, formelements and stylesheets: yes (1) or no (0) |
+credential_files             | Location of Yoda credentials files                                                |
+
+### Mail notifications
+Variable                     | Description                                                             |
+-----------------------------|-------------------------------------------------------------------------|
+send_notifications           | Enable notifications: yes (1) or no (0)
+notifications_sender_email   | Notifiations sender email address
+notifications_reply_to       | Notifiations Reply-To email address
+smtp_server                  | SMTP server to send mail to
+smtp_username                | SMTP server username
+smtp_password                | SMTP server password
 
 ### DataCite Configuration
 Variable                     | Description                                                             |
@@ -140,6 +151,12 @@ datacite_username            | DataCite username                                
 datacite_password            | DataCite password                                                       |
 datacite_prefix              | DataCite DOI prefix                                                     |
 datacite_server              | DataCite server URI                                                     |
+
+# EPIC PID Configuration
+Variable                     | Description                                                             |
+-----------------------------|-------------------------------------------------------------------------|
+epic_url                     | EPIC PID server URI (undefined disables EPIC PID)                       |
+epic_handle_prefix           | EPIC PID prefix                                                         |
 
 ### PAM Radius configuration
 Variable                     | Description                                                             |

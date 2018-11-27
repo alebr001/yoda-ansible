@@ -4,7 +4,7 @@ a system for reliable, long-term storing and archiving large amounts of research
 
 ## Requirements
 ### Control machine requirements
-* [Ansible](https://docs.ansible.com/ansible/intro_installation.html) (>= 2.4)
+* [Ansible](https://docs.ansible.com/ansible/intro_installation.html) (>= 2.5)
 * [VirtualBox](https://www.virtualbox.org/manual/ch02.html) (>= 5.1)
 * [Vagrant](https://www.vagrantup.com/docs/installation/) (>= 1.9)
 
@@ -37,6 +37,11 @@ ansible-playbook -i environments/development/allinone/ playbook.yml
 Provision Yoda with test data:
 ```bash
 ansible-playbook -i environments/development/allinone/ test.yml
+```
+
+Provision Yoda with zabbix agent and yoda monitoring scripts:
+```bash
+ansible-playbook -i environments/development/allinone/ zabbix.yml
 ```
 
 Add following hosts to /etc/hosts (GNU/Linux or macOS) or  %SystemRoot%\System32\drivers\etc\hosts (Windows):

@@ -11,8 +11,8 @@ ansible_ssh_private_key_file: vagrant/ssh/vagrant # Path to private key file of 
 # Yoda configuration
 #####################
 instance: allinone                                 # Name of Yoda instance, as defined in hosts file
-yoda_version: release-1.2                          # Git branch, for example: development or release-1.0
-codeigniter_environment: development               # CodeIgniter environment: development, testing, acceptance or production
+yoda_version: release-1.3                          # Git branch, for example: development or release-1.3
+yoda_environment: development                      # Yoda environment: development, testing, acceptance or production
 yoda_portal_fqdn: portal.yoda.test                 # Yoda Portal fully qualified domain name (FQDN)
 yoda_davrods_fqdn: data.yoda.test                  # Yoda Davrods WebDAV fully qualified domain name (FQDN)
 yoda_davrods_anonymous_fqdn: public.data.yoda.test # Yoda Davrods anonymous WebDAV fully qualified domain name (FQDN)
@@ -45,7 +45,6 @@ irods_admin: rods                          # iRODS admin username
 irods_password: rods                       # iRODS admin password
 irods_database_user: irodsdb               # The iRODS database username
 irods_database_password: irodsdev          # The password for the iRODS database username
-irods_authentication_scheme: Native        # iRODS authentication method: "Native" or "PAM"
 irods_zone: tempZone                       # The name of the iRODS Zone
 irods_icat_fqdn: combined.yoda.test        # iRODS iCAT fully qualified domain name (FQDN)
 irods_database_fqdn: combined.yoda.test    # iRODS database fully qualified domain name (FQDN)
@@ -143,14 +142,31 @@ yoda_random_id_length: 6       # Length of random ID to add to persistent identi
 yoda_prefix: UU01              # Prefix for internal portion of persistent identifier
 update_rulesets: yes           # Update already installed rulesets with git
 update_schemas: 1              # Update already installed schemas, formelements and stylesheets: yes (1) or no (0)
+credential_files: PLACEHOLDER  # Location of Yoda credentials files
+
+#####################
+# Mail notifications
+#####################
+send_notifications: 0               # Enable notifications: yes (1) or no (0)
+notifications_sender_email: noreply@yoda.test # Notifiations sender email address
+notifications_reply_to: noreply@yoda.test     # Notifiations Reply-To email address
+smtp_server: PLACEHOLDER            # SMTP server to send mail to
+smtp_username: PLACEHOLDER          # SMTP server username
+smtp_password: PLACEHOLDER          # SMTP server password
 
 #########################
 # DataCite Configuration
 #########################
+datacite_server: mds.test.datacite.org  # DataCite server URI
 datacite_username: PLACEHOLDER          # DataCite username
 datacite_password: PLACEHOLDER          # DataCite password
 datacite_prefix: 10.5072                # DataCite DOI prefix
-datacite_server: mds.test.datacite.org  # DataCite server URI
+
+#########################
+# EPIC PID Configuration
+#########################
+epic_url: PLACEHOLDER              # EPIC PID server URI (undefined disables EPIC PID)
+epic_handle_prefix: PLACEHOLDER    # EPIC PID prefix
 
 ###########################
 # PAM Radius configuration
@@ -159,6 +175,11 @@ datacite_server: mds.test.datacite.org  # DataCite server URI
 pam_radius_config: |
   127.0.0.1     secret         1
   other-server  other-secret   3
+
+#######################
+# Zabbix configuration
+#######################
+zabbix_server: PLACEHOLDER
 
 ############################
 # Public host configuration

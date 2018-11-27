@@ -1,15 +1,14 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
-#
-# copyright Utrecht University
-#
-# license: GPL v3
-#
-from ansible.module_utils.basic import *
+# Copyright (c) 2017-2018 Utrecht University
+# GNU General Public License v3.0
 
-ANSIBLE_METADATA = {'metadata_version': '1.0',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
+ANSIBLE_METADATA = {
+    'metadata_version': '1.1',
+    'supported_by': 'community',
+    'status': ['preview']
+}
+
+from ansible.module_utils.basic import *
 
 
 IRODSCLIENT_AVAILABLE = False
@@ -37,6 +36,7 @@ def main():
             category=dict(default=None, required=True),
             subcategory=dict(default=None, required=True),
             description=dict(default=None, required=True),
+            dataClassification=dict(default=None, required=True),            
             state=dict(default="present")
         ),
         supports_check_mode=True)
@@ -45,6 +45,7 @@ def main():
     category = module.params["category"]
     subcategory = module.params["subcategory"]
     description = module.params["description"]
+    dataClassification = module.params["dataClassification"]    
     state = module.params["state"]
 
     if IRODSCLIENT_AVAILABLE:
@@ -62,7 +63,7 @@ def main():
     # Rule to add a group to Yoda.
     rule_body = textwrap.dedent('''\
         test {{
-            uuGroupAdd(*groupName, *category, *subcategory, *description, *status, *message);
+            uuGroupAdd(*groupName, *category, *subcategory, *description, *dataClassification, *status, *message);
         }}''')
 
     # Rule parameters.
@@ -70,7 +71,8 @@ def main():
         '*groupName': '"{groupName}"'.format(**locals()),
         '*category': '"{category}"'.format(**locals()),
         '*subcategory': '"{subcategory}"'.format(**locals()),
-        '*description': '"{description}"'.format(**locals())
+        '*description': '"{description}"'.format(**locals()),
+        '*dataClassification': '"{dataClassification}"'.format(**locals())
     }
     output = 'ruleExecOut'
 
