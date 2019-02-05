@@ -40,6 +40,22 @@
   when: item is search('(Installed|Updated)')
   with_items: "{{ install_default_xml_for_metadata.stdout_lines|default('Script did not run') }}"
 
+- name: Find out if transformation collection exists
+  become_user: "{{ irods_service_account }}"
+  become: yes
+  command: 'ils /{{ irods_zone }}/yoda/transformations'
+  ignore_errors: True
+  register: terms_installed
+  changed_when: False
+
+- name: Install transformations
+  become_user: "{{ irods_service_account }}"
+  become: yes
+  shell: |
+    iput -r /etc/irods/irods-ruleset-research/tools/transformations /{{ irods_zone }}/yoda
+    ichmod -rM inherit /{{ irods_zone }}/yoda/transformations
+    ichmod -rM read public /{{ irods_zone }}/yoda/transformations
+  when: (not ansible_check_mode) and (terms_installed.stderr.find('does not exist') >= 0)    
 
 - name: Find out if terms and conditions system collection exists
   become_user: "{{ irods_service_account }}"
